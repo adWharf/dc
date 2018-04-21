@@ -39,3 +39,13 @@ password="password"
 [db.etcd]
 host="127.0.0.1"
 port=2379
+
+[db.mysql]
+driver="mysql"
+host="localhost"
+port=3306
+database="dc"
+user="root"
+password="123456"
+log_queries=true
+charset= "utf8"

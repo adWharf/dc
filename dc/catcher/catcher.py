@@ -9,7 +9,7 @@
 @file: catcher.py
 @time: 12/04/2018 18:32
 """
-from core import db, config
+from dc.core import db, config
 import influxdb
 
 

@@ -11,7 +11,7 @@
 """
 
 from orator import Schema
-from migrations import agency, account, point
+from dc.migrations import agency, point, account
 
 
 def migrate(schema: Schema):

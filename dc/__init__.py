@@ -7,6 +7,5 @@
 @contact: 1342247033@qq.com
 @site: http://www.xiaolewei.com
 @file: __init__.py.py
-@time: 10/04/2018 16:14
-@description:
+@time: 27/04/2018 10:46
 """

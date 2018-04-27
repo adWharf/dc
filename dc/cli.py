@@ -9,10 +9,9 @@
 @file: cli.py
 @time: 10/04/2018 16:42
 """
-import sys
 import click
-from core import config
-from core.db import get_mysql_client
+from dc.core import config
+from dc.core.db import get_mysql_client
 from orator import Schema
 
 
@@ -23,7 +22,7 @@ def cli():
 
 @cli.command()
 def migrate():
-    from migration import migrate
+    from dc.migration import migrate
     db = get_mysql_client(config.get('app.db.mysql'))
     schema = Schema(db)
     migrate(schema)
@@ -31,7 +30,7 @@ def migrate():
 
 @cli.command('migrate:rollback')
 def rollback():
-    from migration import rollback
+    from dc.migration import rollback
     db = get_mysql_client(config.get('app.db.mysql'))
     schema = Schema(db)
     rollback(schema)

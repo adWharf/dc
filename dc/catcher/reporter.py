@@ -11,10 +11,9 @@
 """
 import json
 from kafka import KafkaConsumer
-from core import config, db, logger, cache
+from dc.core import cache, logger, config
 import requests
-import pendulum
-from catcher.catcher import Catcher
+from .catcher import Catcher
 
 
 def fetch_order_info(start, end):
@@ -26,27 +25,37 @@ def fetch_order_info(start, end):
 def connect_order(ads, order, prefix=''):
     for ad in ads:
         if ad['cname'] in order:
-            pass
-
+            ad['1day_action_step'] = order[ad['cname']]['step']
+            ad['1day_action_reversion'] = order[ad['cname']]['unpaid']
+            ad['1day_action_complete_order'] = order[ad['cname']]['paid']
+            ad['1day_action_complete_order_amount'] = order[ad['cname']]['amount']
     return ads
 
 
 class Reporter(Catcher):
+    '''
+
+    '''
     def __init__(self):
+        logger.info('Init Reporter...')
         Catcher.__init__(self)
         kafka_server = '%s:%d' % (config.get('app.kafka.host'), config.get('app.kafka.port'))
+        logger.info('Try to connect to kafka...')
         self._consumer = KafkaConsumer('ad.original.statistic',
                                        client_id='ad_statistic_catcher',
                                        group_id='ad_statistic_catcher',
                                        bootstrap_servers=kafka_server)
+        logger.info('Connect to kafka successfully')
         for msg in self._consumer:
             try:
-                data = json.loads(json.loads(msg.value))
-                if cache.get('dc.catcher.reporter.%s.%s' % (data['account'], data['update_at'])):
+                data = json.loads(msg.value)
+                if cache.get('dc.catcher.reporter.%s.%s' % (data['account'], data['update_time'])):
                     continue
-                order_data = fetch_order_info(pendulum.today('local').to_datetime_string(), data['updated_at'])
-                records = connect_order(data, order_data)
-                self._db.table('records').save(records)
+                order_data = fetch_order_info(data['update_time'][:10] + ' 00:00:00', data['update_time'])
+                records = connect_order(data['data'], order_data)
+                with self._db.transaction():
+                    for record in records:
+                        self._db.table('records').insert(record)
                 self._consumer.commit()
             except Exception as e:
                 logger.error(e)

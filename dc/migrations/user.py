@@ -13,6 +13,8 @@ from orator import Schema
 
 
 def migrate(schema: Schema):
+    if schema.has_table('users'):
+        return
     with schema.create('users') as table:
         table.big_increments('id')
         table.string('name')

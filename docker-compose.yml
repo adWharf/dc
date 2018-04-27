@@ -1,0 +1,54 @@
+version: '2.1'
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      dc:
+        aliases:
+          - "redis"
+    restart: always
+
+
+  mysql:
+    image: mysql:5.6
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+    networks:
+      dc:
+        aliases:
+          - "mysql"
+    restart: always
+
+
+  influxdb:
+    image: influxdb:alpine
+    ports:
+      - "8086:8086"
+      - "8083:8083"
+    environment:
+      - INFLUXDB_ADMIN_ENABLED=true
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=admin
+      - INFLUXDB_HTTP_AUTH_ENABLED=true
+      - INFLUXDB_DB=test
+    networks:
+      dc:
+        aliases:
+          - "influxdb"
+    restart: always
+
+  dc:
+    build: .
+    ports:
+      - "9092:9092"
+    networks:
+      dc:
+        aliases:
+          - "dc"
+networks:
+  dc:
+    driver: bridge

@@ -11,6 +11,7 @@
 """
 import json
 from kafka import KafkaConsumer
+import pendulum
 from dc.core import cache, logger, config
 import requests
 from .catcher import Catcher
@@ -59,12 +60,32 @@ class Reporter(Catcher):
                     continue
                 order_data = fetch_order_info(data['update_time'][:10] + ' 00:00:00', data['update_time'])
                 records = connect_order(data['data'], order_data)
+                points = []
+                avai_fields = ['total_cost', 'view_count', 'sy_cost', 'click_count', '1day_action_step',
+                              '1day_action_reversion', '1day_action_complete_order', '1day_action_complete_order_amount']
+                avai_tags = ['account', 'cname']
                 with self._db.transaction():
                     for record in records:
+                        fields = {}
+                        tags = {}
                         record['account'] = account_name
                         record['account_id'] = account['id']
+                        for key in avai_fields:
+                            if key in record:
+                                fields[key] = float(record[key])
+                        for key in avai_tags:
+                            if key in record:
+                                tags[key] = str(record[key])
+                        points.append({
+                            'measurement': record['agency'],
+                            'tags': tags,
+                            'time': pendulum.from_format(record['update_time'], '%Y-%m-%d %H:%M:%S'),
+                            'fields': fields
+                        })
                         self._db.table('points').insert(record)
+                self._influxdb.write_points(points)
             except Exception as e:
+                raise e
                 logger.error(e)
 
 

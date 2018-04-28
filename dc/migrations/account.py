@@ -17,7 +17,8 @@ def migrate(schema: Schema):
         return
     with schema.create('accounts') as table:
         table.big_increments('id')
-        table.string('agency')
+        table.string('name')
+        table.string('agency_id').nullable()
         table.string('username').nullable()
         table.string('password').nullable()
         table.string('phone').nullable()

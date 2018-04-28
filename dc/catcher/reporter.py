@@ -15,6 +15,8 @@ from dc.core import cache, logger, config
 import requests
 from .catcher import Catcher
 
+logger = logger.get('Catcher.Reporter')
+
 
 def fetch_order_info(start, end):
     resp = requests.get(config.get('app.api.order.url') % (start, end))
@@ -42,7 +44,7 @@ class Reporter(Catcher):
         kafka_server = '%s:%d' % (config.get('app.kafka.host'), config.get('app.kafka.port'))
         logger.info('Try to connect to kafka...')
         self._consumer = KafkaConsumer('ad.original.statistic',
-                                       client_id='ad_statistic_catcher',
+                                       client_id='ad_statistic_catcher_reporter',
                                        group_id='ad_statistic_catcher',
                                        bootstrap_servers=kafka_server)
         logger.info('Connect to kafka successfully')
@@ -51,12 +53,17 @@ class Reporter(Catcher):
                 data = json.loads(msg.value)
                 if cache.get('dc.catcher.reporter.%s.%s' % (data['account'], data['update_time'])):
                     continue
+                account_name = data['account']
+                account = self._db.table('accounts').where('name', account_name).first()
+                if not account:
+                    continue
                 order_data = fetch_order_info(data['update_time'][:10] + ' 00:00:00', data['update_time'])
                 records = connect_order(data['data'], order_data)
                 with self._db.transaction():
                     for record in records:
-                        self._db.table('records').insert(record)
-                self._consumer.commit()
+                        record['account'] = account_name
+                        record['account_id'] = account['id']
+                        self._db.table('points').insert(record)
             except Exception as e:
                 logger.error(e)
 

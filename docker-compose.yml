@@ -35,6 +35,7 @@ services:
       - INFLUXDB_ADMIN_PASSWORD=admin
       - INFLUXDB_HTTP_AUTH_ENABLED=true
       - INFLUXDB_DB=test
+      - INFLUXDB_DATA_MAX_VALUES_PER_TAG=0
     networks:
       dc:
         aliases:
@@ -44,7 +45,7 @@ services:
   dc:
     build: .
     ports:
-      - "9092:9092"
+      - "5000:5000"
     networks:
       dc:
         aliases:

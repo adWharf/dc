@@ -11,7 +11,7 @@
 """
 
 from orator import Schema
-from migrations import account, agency, point, user
+from migrations import account, agency, point, user, strategy
 
 
 def migrate(schema: Schema):
@@ -24,6 +24,7 @@ def migrate(schema: Schema):
     agency.migrate(schema)
     point.migrate(schema)
     user.migrate(schema)
+    strategy.migrate(schema)
     # for p, d, files in os.walk(os.path.join(config.APP_PATH, 'migrations')):
     #     for f in files:
     #         name = f.split('.')[0]
@@ -38,4 +39,4 @@ def rollback(schema: Schema):
     agency.rollback(schema)
     point.rollback(schema)
     user.rollback(schema)
-    pass
+    strategy.rollback(schema)

@@ -72,9 +72,10 @@ def migrate(schema: Schema):
     '''
     with schema.create('trim_actions') as table:
         table.big_increments('id')
-        table.big_integer('strategy_id')
+        table.big_integer('account_id')
+        table.big_integer('campaign_id')
         table.text('action')                            # 具体调整内容
-        table.text('triggered_record').nullable()       # 触发该action的记录
+        table.text('triggered_point').nullable()        # 触发该action的记录
         table.text('resp_cnt').nullable()
         table.string('resp_status_code').nullable()
         table.timestamps()

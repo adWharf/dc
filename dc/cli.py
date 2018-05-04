@@ -36,6 +36,13 @@ def rollback():
     rollback(schema)
 
 
+@cli.command('schedule')
+def schedule():
+    from schedule.scheduler import Scheduler
+    s = Scheduler()
+    s.run()
+
+
 if __name__ == '__main__':
     cli()
 

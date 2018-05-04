@@ -50,7 +50,7 @@ class HistoryFilter(BaseModel):
         return Strategy
 
 
-class Trim(Model):
+class Trim(BaseModel):
     __table__ = 'trims'
 
     @belongs_to
@@ -58,3 +58,9 @@ class Trim(Model):
         return Strategy
 
 
+class Action(BaseModel):
+    __table__ = 'trim_actions'
+
+    @belongs_to
+    def strategy(self):
+        return Strategy

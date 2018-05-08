@@ -49,3 +49,10 @@ user="root"
 password="123456"
 log_queries=true
 charset= "utf8"
+
+[db.mongo]
+user=""
+password=""
+host=""
+port=27017
+db=""

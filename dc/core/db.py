@@ -27,6 +27,11 @@ def get_mysql_client(config):
 
 
 def get_mongo_client(config):
+    '''
+    Doc: http://api.mongodb.com/python/current/api/pymongo/collection.html#pymongo.collection.Collection
+    :param config:
+    :return:
+    '''
     for key in ['user', 'password', 'host', 'port']:
         if key not in config:
             config[key] = None

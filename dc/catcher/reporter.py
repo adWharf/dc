@@ -9,17 +9,24 @@
 @file: reporter.py
 @time: 10/04/2018 16:14
 """
+import threading
 import json
-from kafka import KafkaConsumer
+from kafka import KafkaConsumer, KafkaProducer
 import pendulum
-from dc.core import cache, logger, config
+from dc.core import cache, logger, config, db
 import requests
 from .catcher import Catcher
+from dc.constants.topics import AD_PROCESSED_TOPIC, AD_CAMPAIGN_INFO_TOPIC, AD_ORIGIN_STATISTIC_TOPIC
 
 logger = logger.get('Catcher.Reporter')
 
 
 def fetch_order_info(start, end):
+    '''
+    :param start:
+    :param end:
+    :return:
+    '''
     resp = requests.get(config.get('app.api.order.url') % (start, end))
     if resp.status_code/100 == 2:
         return json.loads(resp.content)
@@ -42,13 +49,63 @@ class Reporter(Catcher):
     def __init__(self):
         logger.info('Init Reporter...')
         Catcher.__init__(self)
+        self._mongo = db.get_mongo_client(config.get('app.db.mongo'))
         kafka_server = '%s:%d' % (config.get('app.kafka.host'), config.get('app.kafka.port'))
         logger.info('Try to connect to kafka...')
-        self._consumer = KafkaConsumer('ad.original.statistic',
+        self._consumer = KafkaConsumer(AD_ORIGIN_STATISTIC_TOPIC,
                                        client_id='ad_statistic_catcher_reporter',
                                        group_id='ad_statistic_catcher',
                                        bootstrap_servers=kafka_server)
-        logger.info('Connect to kafka successfully')
+        logger.info('Connect to kafka[%s] successfully' % AD_ORIGIN_STATISTIC_TOPIC)
+
+        self._producer = KafkaProducer(value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+                                       client_id='ad.statistic.worker',
+                                       compression_type='gzip',
+                                       bootstrap_servers=kafka_server,
+                                       retries=3)
+
+        self._campaign_info_consumer = KafkaConsumer('ad.campaign.info',
+                                                     client_id='ad_statistic_catcher_reporter',
+                                                     group_id='ad_statistic_catcher',
+                                                     bootstrap_servers=kafka_server)
+        logger.info('Connect to kafka[%s] successfully' % AD_CAMPAIGN_INFO_TOPIC)
+        t1 = threading.Thread(target=self._consumer_statistic)
+        t2 = threading.Thread(target=self._campaign_info_consumer)
+        t1.run()
+        t2.run()
+        t1.join()
+        t2.join()
+
+    def _consumer_campaign_info(self):
+        coll = 'compaigns'
+        for msg in self._campaign_info_consumer:
+            try:
+                '''
+                @:var data:
+                {
+                    'agency': 'wxect',
+                    'account': 'MyAccount',
+                    'campaigns: [
+                        { 
+                            cid: XX,
+                            
+                         },
+                    ]
+                }
+                '''
+                data = json.loads(msg.value)
+                for campaign in data['campaigns']:
+                    self._mongo[coll].update_one({'cid': campaign['cid'],
+                                                  'agency': data['agency'],
+                                                  'account': data['account']},
+                                                 campaign.update({'agency': data['agency'],
+                                                                  'account': data['account']
+                                                                  }, True))
+
+            except Exception as e:
+                logger.error(e)
+
+    def _consumer_statistic(self):
         for msg in self._consumer:
             try:
                 data = json.loads(msg.value)
@@ -83,9 +140,11 @@ class Reporter(Catcher):
                             'fields': fields
                         })
                         self._db.table('points').insert(record)
+                        self._producer.send(AD_PROCESSED_TOPIC, record)
                 self._influxdb.write_points(points)
+
             except Exception as e:
-                raise e
                 logger.error(e)
+
 
 

@@ -77,7 +77,7 @@ class Reporter(Catcher):
         t2.join()
 
     def _consumer_campaign_info(self):
-        coll = 'compaigns'
+        coll = 'campaigns'
         for msg in self._campaign_info_consumer:
             try:
                 '''

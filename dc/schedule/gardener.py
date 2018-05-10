@@ -14,7 +14,7 @@ import pycron
 from dc.core import db, config, logger
 from .bowler import Bowler
 from .commander import Commander
-from .models import Model, Strategy, Filter, HistoryFilter, Trim, Action
+from dc.models import Model, Strategy, Filter, HistoryFilter, Trim, Action
 
 logger = logger.get('Schedule.Gardener')
 
@@ -119,6 +119,12 @@ class Gardener(object):
         return False
 
     def _parse_actions(self, data, strategy: Strategy):
+        '''
+        目前支持修改出价／修改生效时间
+        :param data:
+        :param strategy:
+        :return:
+        '''
         trims = strategy.trims
         actions = []
         for trim in trims:

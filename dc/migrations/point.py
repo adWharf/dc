@@ -25,11 +25,11 @@ def migrate(schema: Schema):
         table.big_integer('creative_id').nullable()
         table.big_integer('aid').nullable()
         table.string('cname')
-        table.decimal('total_cost')
+        table.big_integer('total_cost')
         table.big_integer('view_count')
         table.big_integer('click_count')
         table.small_integer('status').default(0)
-        table.decimal('sy_cost').default(0.00)
+        table.decimal('sy_cost', 12, 2).default(0.00)
         # 二跳
         table.big_integer('1day_action_step').default(0)
         # 预约量

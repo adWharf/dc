@@ -64,15 +64,15 @@ class Reporter(Catcher):
                                        bootstrap_servers=kafka_server,
                                        retries=3)
 
-        self._campaign_info_consumer = KafkaConsumer('ad.campaign.info',
-                                                     client_id='ad_statistic_catcher_reporter',
-                                                     group_id='ad_statistic_catcher',
+        self._campaign_info_consumer = KafkaConsumer(AD_CAMPAIGN_INFO_TOPIC,
+                                                     client_id='ad_campaign_catcher_reporter',
+                                                     group_id='ad_campaign_catcher',
                                                      bootstrap_servers=kafka_server)
         logger.info('Connect to kafka[%s] successfully' % AD_CAMPAIGN_INFO_TOPIC)
-        t1 = threading.Thread(target=self._consumer_statistic)
-        t2 = threading.Thread(target=self._campaign_info_consumer)
-        t1.run()
-        t2.run()
+        t1 = threading.Thread(target=Reporter._consumer_statistic, args=(self, ))
+        t2 = threading.Thread(target=Reporter._consumer_campaign_info, args=(self, ))
+        t1.start()
+        t2.start()
         t1.join()
         t2.join()
 
@@ -93,14 +93,18 @@ class Reporter(Catcher):
                     ]
                 }
                 '''
+                logger.info('Receive campaign info from kafka')
                 data = json.loads(msg.value)
                 for campaign in data['campaigns']:
-                    self._mongo[coll].update_one({'cid': campaign['cid'],
-                                                  'agency': data['agency'],
-                                                  'account': data['account']},
-                                                 campaign.update({'agency': data['agency'],
-                                                                  'account': data['account']
-                                                                  }, True))
+                    campaign.update({'agency': data['agency'],
+                                     'account': data['account']})
+
+                    self._mongo[coll].replace_one({'cid': campaign['cid'],
+                                                   'agency': data['agency'],
+                                                   'account': data['account']
+                                                   },
+                                                  campaign,
+                                                  True)
 
             except Exception as e:
                 logger.error(e)

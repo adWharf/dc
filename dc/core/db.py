@@ -37,12 +37,15 @@ def get_mongo_client(config):
             config[key] = None
     if "database" not in config:
         raise Exception('database is necessary when connecting mongodb')
+    if 'auth_database' not in config:
+        config['auth_database'] = config['database']
 
     conn = MongoClient(username=config['user'],
                        password=config['password'],
                        host=config['host'],
-                       port=config['port'])
-    return conn.config['db']
+                       port=config['port'],
+                       authSource=config['auth_database'])
+    return conn[config['database']]
 
 
 def get_redis_client(config):

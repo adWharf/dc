@@ -55,4 +55,5 @@ user=""
 password=""
 host=""
 port=27017
-db=""
+database=""
+auth_database="admin"

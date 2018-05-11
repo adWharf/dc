@@ -6,8 +6,11 @@
 @author: william
 @contact: 1342247033@qq.com
 @site: http://www.xiaolewei.com
-@file: __init__.py.py
+@file: campaign.py
 @time: 10/05/2018 16:32
 """
-from .models import *
-from .wxcampaign import WXCampaign
+from .models import Campaign as BaseCampaign
+
+
+class Campaign(object):
+    pass

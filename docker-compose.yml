@@ -10,7 +10,6 @@ services:
           - "redis"
     restart: always
 
-
   mysql:
     image: mysql:5.6
     ports:
@@ -21,6 +20,19 @@ services:
       dc:
         aliases:
           - "mysql"
+    restart: always
+
+  mongo:
+    image: mongo:3.6
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=123456
+    networks:
+      dc:
+        aliases:
+          - "mongo"
     restart: always
 
 
@@ -50,6 +62,14 @@ services:
       dc:
         aliases:
           - "dc"
+  schedule:
+    build: Dockerfile-schedule
+    ports:
+      - "5001:5001"
+    networks:
+      dc:
+        aliases:
+          - "schedule"
 networks:
   dc:
     driver: bridge

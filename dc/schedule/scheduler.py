@@ -11,12 +11,14 @@
 """
 from .bowler import HttpBowler, KafkaBowler
 from .gardener import Gardener
+from .commander import KafkaTopicCommander
 
 
 class Scheduler(object):
     def __init__(self):
         bowler = KafkaBowler()
-        self._gardener = Gardener(bowler)
+        commander = KafkaTopicCommander()
+        self._gardener = Gardener(bowler, commander)
         # self._gardener_pid = Process(target=self._gardener.trim)
         pass
 

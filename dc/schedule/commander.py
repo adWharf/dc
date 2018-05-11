@@ -12,7 +12,7 @@
 import json
 from kafka import KafkaProducer
 from dc.core import config, logger
-from dc.constants.topics import AGENCY_COMMAND
+from dc.constants.topics import AGENCY_COMMAND_TOPIC
 
 logger = logger.get('Schedule.Commander')
 
@@ -36,5 +36,11 @@ class KafkaTopicCommander(Commander):
                                        retries=3)
 
     def transmit(self, actions):
-        self._producer.send(AGENCY_COMMAND, actions)
+        self._producer.send(AGENCY_COMMAND_TOPIC, actions)
         return False
+
+
+class HttpCommander(Commander):
+    def __init__(self):
+        Commander.__init__(self)
+

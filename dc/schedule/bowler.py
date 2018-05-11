@@ -9,10 +9,14 @@
 @file: bowler.py
 @time: 03/05/2018 15:38
 """
+import time
 import json
+from multiprocessing import Process, Pipe
+from .httpbridge import run as build_bridge
 from kafka import KafkaConsumer
 from dc.constants.topics import AD_PROCESSED_TOPIC
 from dc.core import config, logger, db
+
 
 logger = logger.get('Schedule.Bowler')
 
@@ -63,4 +67,19 @@ class KafkaBowler(Bowler):
 class HttpBowler(Bowler):
     def __init__(self):
         Bowler.__init__(self)
+        self._data_q, another_data_end = Pipe()
+        self._command_q, another_command_end = Pipe()
+        self._bridge = Process(target=build_bridge, args=(another_data_end, another_command_end))
+        self._bridge.start()
+
+    def _msg_generator(self):
+        while True:
+            while self._data_q.poll():
+                try:
+                    logger.info('Receive ad data')
+                    data = str(self._data_q.recv_bytes(), encoding='utf-8')
+                    yield json.loads(data)
+                except Exception as e:
+                    logger.error(e)
+            time.sleep(5)
 

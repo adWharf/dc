@@ -57,3 +57,7 @@ host=""
 port=27017
 database=""
 auth_database="admin"
+
+[schedule]
+[schedule.bowler.httpbowler]
+port=5001

@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt && \
     echo "Asia/Shanghai" > /etc/timezone
 COPY . .
 VOLUME /usr/scr/app/config
-CMD [ "python", "dc/datacenter.py" ]
+CMD [ "python", "dc/schedule.py" ]

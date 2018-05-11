@@ -12,6 +12,7 @@
 import json
 from .campaign import Campaign
 from dc.core import logger
+from dc.constants.ad import AD_BID_TYPE, AD_BID_TYPE_OCPM_OPT_MORE_CLICK, AD_BID_TYPE_OCPM_OPT_MORE_ORDER
 
 logger = logger.get('Models.WXCampaign')
 
@@ -35,4 +36,21 @@ class WXCampaign(Campaign):
         except Exception as e:
             logger.error(e)
             return False
+
+    def bid_type(self):
+        try:
+            ad_group = self._campaign['target_groups'][0]['ad_groups'][0]['ad_group']
+            if not ad_group:
+                return None, None
+            if 'strategy_opt' not in ad_group:
+                return AD_BID_TYPE.CPM, None
+            opt = json.loads(ad_group['strategy_opt'])
+            if opt['bid_action_type'] == AD_BID_TYPE_OCPM_OPT_MORE_ORDER:
+                return AD_BID_TYPE.OCPM, AD_BID_TYPE_OCPM_OPT_MORE_ORDER
+            elif opt['bid_action_type'] == AD_BID_TYPE_OCPM_OPT_MORE_CLICK:
+                return AD_BID_TYPE.OCPM, AD_BID_TYPE_OCPM_OPT_MORE_CLICK
+        except Exception as e:
+            logger.error(e)
+            return None, None
+
 

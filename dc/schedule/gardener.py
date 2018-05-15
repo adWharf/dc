@@ -47,19 +47,38 @@ def _cast_to(val, tp):
         raise InvalidType
 
 
+def build_command(data, action, val):
+    return {
+        'campaign_id': data['campaign_id'],
+        'action': action,
+        'value': val
+    }
+
+
 class Gardener(object):
     def __init__(self, bowler: Bowler, commander: Commander):
         self._bowler = bowler
         self._commander = commander
         self._db = db.get_mysql_client(config.get('app.db.mysql'))
+        self._mongo = db.get_mongo_client(config.get('app.db.mongo'))
         Model.set_connection_resolver(self._db)
 
     def trim(self):
+        camp_model = Campaign(self._mongo)
         for data in self._bowler:
             try:
+                # Only active campaign need to trim
+                if data['status'] != ADSTATUS_NORMAL:
+                    continue
+
                 strategies = Strategy.where('account_id', data['account_id']).get()
                 # actions = []
-                wxcampaign = WXCampaign(Campaign.find(data['cid']))
+
+                campaign = camp_model.find(data['campaign_id'])
+                if not campaign:
+                    continue
+
+                wxcampaign = WXCampaign(campaign)
                 actions = self._filter(data, strategies, wxcampaign)
                 # for strategy in strategies:
                 #     if not self._filter(data, strategy, wxcampaign):
@@ -88,7 +107,7 @@ class Gardener(object):
         yesterday = pendulum.yesterday().to_datetime_string()
         yesterday_count = Point.where('created_at', '<', today)\
             .where('created_at', '>', yesterday)\
-            .where('campaign_id', data['cid'])\
+            .where('campaign_id', data['campaign_id'])\
             .where('status', ADSTATUS_NORMAL)\
             .first()
 
@@ -104,25 +123,19 @@ class Gardener(object):
             '''
             if data['total_cost']/100 / data['click_count'] > 10 or \
                     (data['total_cost'] > 19000 and data['1day_action_complete_order'] == 0):
-                actions.append({
-                        'action': 'timeset_end',
-                        'value': 6,
-                    })
+                actions.append(build_command(data, 'timeset_end', 6))
         elif (not before_yesterday_count) and yesterday_count:
             '''
             次新计划，满足上述条件直接暂停
             '''
             if data['total_cost']/100 / data['click_count'] > 10 or \
                     (data['total_cost'] > 19000 and data['1day_action_complete_order'] == 0):
-                actions.append({
-                    'action': 'suspend',
-                    'value': None
-                })
+                actions.append(build_command(data, 'suspend', None))
         else:
             statistic = Point.select(Point.raw('sum(1day_action_complete_order) as order_num, '
                                                'sum(1day_action_complete_order_amount) as order_amount)'))\
                 .where('created_at', '>=', today)\
-                .where('campaign_id', data['cid'])\
+                .where('campaign_id', data['campaign_id'])\
                 .where('status', ADSTATUS_NORMAL)\
                 .get()
             ori = data['sy_cost'] / statistic['order_amount']
@@ -132,15 +145,9 @@ class Gardener(object):
                 roi<1.5 && 订单个数>=2  设置到10点
                 '''
                 if statistic['order_num'] < 2 and ori < 1.5:
-                    actions.append({
-                        'action': 'timeset_end',
-                        'value': 7,
-                    })
+                    actions.append(build_command(data, 'timeset_end', 7))
                 elif statistic['order_num'] > 4 and ori < 1.5:
-                    actions.append({
-                        'action': 'timeset_end',
-                        'value': 10,
-                    })
+                    actions.append(build_command(data, 'timeset_end', 10))
             else:
                 '''
                 1-2点，定向非北上城市，（当天花费 > 200 且 历史转换为0） 暂停，
@@ -150,7 +157,7 @@ class Gardener(object):
                 records = Point.select(Point.raw('max(sy_cost) as day_cost, max(1day_action_complete_order) as order_num, '
                                        'max(1day_action_complete_order_amount) as order_amount'))\
                     .where('created_at', '>=', today) \
-                    .where('campaign_id', data['cid']) \
+                    .where('campaign_id', data['campaign_id']) \
                     .group_by(Point.raw('DATE_FORMAT(update_time, "%Y%m%d")')) \
                     .get()
                 total_cost = 0
@@ -163,20 +170,11 @@ class Gardener(object):
                 transfer_rate = total_cost / total_order
                 if data['sy_cost'] > 200:
                     if total_order == 0:
-                        actions.append({
-                            'action': 'suspend',
-                            'value': None
-                        })
+                        actions.append(build_command(data, 'suspend', None))
                     elif transfer_rate >= 1.5:
-                        actions.append({
-                            'action': 'timeset_end',
-                            'value': 9,
-                        })
+                        actions.append(build_command(data, 'timeset_end', 9))
                     else:
-                        actions.append({
-                            'action': 'timeset_end',
-                            'value': 7,
-                        })
+                        actions.append(build_command(data, 'timeset_end', 7))
         return actions
 
 

@@ -39,6 +39,11 @@ def connect_order(ads, order, prefix=''):
             ad['1day_action_reversion'] = order[ad['cname']]['unpaid']
             ad['1day_action_complete_order'] = order[ad['cname']]['paid']
             ad['1day_action_complete_order_amount'] = order[ad['cname']]['amount']
+        else:
+            ad['1day_action_step'] = 0
+            ad['1day_action_reversion'] = 0
+            ad['1day_action_complete_order'] = 0
+            ad['1day_action_complete_order_amount'] = 0
     return ads
 
 

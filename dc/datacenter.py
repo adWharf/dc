@@ -10,15 +10,22 @@
 @time: 10/04/2018 15:24
 """
 from flask import Flask
-from dc.catcher import Reporter
+import multiprocessing
+from dc.catcher import Reporter, Commander
 
 app = Flask(__name__)
 
 
 class DC(object):
     def __init__(self):
-        self._reporter = Reporter()
-        pass
+        threads = [
+            multiprocessing.Process(target=Reporter),
+            multiprocessing.Process(target=Commander)
+        ]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
 
 
 if __name__ == '__main__':

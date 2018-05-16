@@ -99,13 +99,14 @@ class Gardener(object):
                     action.save()
                     commands.append(action.serialize())
                 if len(commands) == 0:
-                    commands.append(build_command(data, 'suspend', None))
+                    commands.append(build_command(data, 'timeset_end', random.randint(6, 20)))
                 if len(commands) > 0:
                     self._commander.transmit({
                         'target': 'client',
                         'client': data['agency'],
                         'commands': commands
                     })
+                    logger.info('Campaign [%d] should be trimmed, send action successfully' % data['campaign_id'])
 
             except Exception as e:
                 logger.error('Exception occurred when handle data [%s]' % json.dumps(data))

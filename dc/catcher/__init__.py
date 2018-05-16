@@ -12,3 +12,4 @@
 """
 from .catcher import Catcher
 from .reporter import Reporter
+from .commander import Commander

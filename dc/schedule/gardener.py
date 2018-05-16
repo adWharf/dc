@@ -97,8 +97,8 @@ class Gardener(object):
                     action.account_id = data['account_id']
                     action.save()
                     commands.append(action.serialize())
-                if len(commands) == 0:
-                    commands.append(build_command(data, 'timeset_end', random.randint(6, 20)))
+                # if len(commands) == 0:
+                #     commands.append(build_command(data, 'timeset_end', random.randint(6, 20)))
                 if len(commands) > 0:
                     self._commander.transmit({
                         'target': 'client',

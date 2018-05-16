@@ -14,7 +14,7 @@ from .catcher import Catcher
 from dc.core import config, logger
 from kafka import KafkaConsumer
 from dc.constants.topics import AGENCY_COMMAND_REPORTER_TOPIC
-from dc.models import Point
+from dc.models import Action
 
 logger = logger.get('Catcher.Commander')
 
@@ -29,15 +29,16 @@ class Commander(Catcher):
                                        group_id='commander_result_reporter',
                                        bootstrap_servers=kafka_server)
         logger.info('Connect to kafka[%s] successfully' % AGENCY_COMMAND_REPORTER_TOPIC)
+        self._consumer_command_res()
 
     def _consumer_command_res(self):
         for msg in self._consumer:
             try:
                 logger.info('Receive command results from kafka')
-                point = json.loads(msg.value)
-                Point.where('id', point['id']).update({
-                    'resp_cnt': point['resp_cnt'],
-                    'resp_status': point['resp_status']
+                action = json.loads(msg.value)
+                Action.where('id', action['id']).update({
+                    'resp_cnt': action['resp_cnt'],
+                    'resp_status_code': action['resp_status']
                 })
             except Exception as e:
                 logger.error(e)

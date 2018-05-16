@@ -9,11 +9,8 @@
 @file: datacenter.py
 @time: 10/04/2018 15:24
 """
-from flask import Flask
 import multiprocessing
 from dc.catcher import Reporter, Commander
-
-app = Flask(__name__)
 
 
 class DC(object):

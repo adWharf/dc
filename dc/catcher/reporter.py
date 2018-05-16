@@ -112,6 +112,7 @@ class Reporter(Catcher):
     def _consumer_statistic(self):
         for msg in self._consumer:
             try:
+                logger.info('Receive ad info from kafka')
                 data = json.loads(msg.value)
                 if cache.get('dc.catcher.reporter.%s.%s' % (data['account'], data['update_time'])):
                     continue

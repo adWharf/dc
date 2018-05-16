@@ -12,3 +12,7 @@
 from .models import *
 from .campaign import CampaignHelper
 from .wxcampaign import WXCampaign
+from dc.core import db, config
+
+_conn = db.get_mysql_client(config.get('app.db.mysql'))
+Model.set_connection_resolver(_conn)

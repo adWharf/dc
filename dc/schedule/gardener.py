@@ -62,7 +62,6 @@ class Gardener(object):
         self._commander = commander
         self._db = db.get_mysql_client(config.get('app.db.mysql'))
         self._mongo = db.get_mongo_client(config.get('app.db.mongo'))
-        Model.set_connection_resolver(self._db)
 
     def trim(self):
         camp_model = Campaign(self._mongo)

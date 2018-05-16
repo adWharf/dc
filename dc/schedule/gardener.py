@@ -86,18 +86,22 @@ class Gardener(object):
                 #     if not self._history_filter(data, strategy, wxcampaign):
                 #         continue
                 #     actions.append(self._parse_actions(data, strategy))
-                if len(actions) > 0:
+                send_command = {
+                    'target': 'client',
+                    'client': data['agency'],
+                    'commands': []
+                }
+                for act in actions:
                     action = Action()
                     action.campaign_id = data['campaign_id']
-                    action.action = json.dumps(actions)
+                    action.action = act['action']
+                    action.value = act['value']
                     action.triggered_point = json.dumps(data)
                     action.account_id = data['account_id']
                     action.save()
-                    self._commander.transmit({
-                        'target': 'client',
-                        'client': data['agency'],
-                        'actions': actions
-                    })
+                    send_command['commands'].append(action.serialize())
+                self._commander.transmit(send_command)
+
             except Exception as e:
                 logger.error('Exception occurred when handle data [%s]' % json.dumps(data))
                 logger.error(e)

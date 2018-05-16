@@ -9,8 +9,15 @@
 @file: campaign.py
 @time: 10/05/2018 16:32
 """
-from .models import Campaign as BaseCampaign
 
 
-class Campaign(object):
-    pass
+class CampaignHelper(object):
+
+    def is_beishang(self):
+        raise NotImplemented
+
+    def delivery_time(self):
+        raise NotImplemented
+
+    def bid_type(self):
+        raise NotImplemented

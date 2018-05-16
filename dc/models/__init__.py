@@ -10,4 +10,5 @@
 @time: 10/05/2018 16:32
 """
 from .models import *
+from .campaign import CampaignHelper
 from .wxcampaign import WXCampaign

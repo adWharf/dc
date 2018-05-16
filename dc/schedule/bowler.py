@@ -54,6 +54,7 @@ class KafkaBowler(Bowler):
                                        client_id='ad_statistic_catcher_reporter',
                                        group_id='ad_statistic_catcher',
                                        bootstrap_servers=kafka_server)
+        logger.info('Connect to kafka[%s] successfully' % kafka_server)
 
     def _msg_generator(self):
         for msg in self._consumer:

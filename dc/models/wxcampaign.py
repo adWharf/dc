@@ -10,14 +10,15 @@
 @time: 10/05/2018 16:32
 """
 import json
-from .campaign import Campaign
+from .campaign import CampaignHelper
 from dc.core import logger
+import pendulum
 from dc.constants.ad import AD_BID_TYPE, AD_BID_TYPE_OCPM_OPT_MORE_CLICK, AD_BID_TYPE_OCPM_OPT_MORE_ORDER
 
 logger = logger.get('Models.WXCampaign')
 
 
-class WXCampaign(Campaign):
+class WXCampaign(CampaignHelper):
     def __init__(self, campaign):
         self._campaign = campaign
 
@@ -53,4 +54,7 @@ class WXCampaign(Campaign):
             logger.error(e)
             return None, None
 
+    def delivery_time(self):
+        return pendulum.from_timestamp(self._campaign['campaign']['begin_time'], 'local'), \
+               pendulum.from_timestamp(self._campaign['campaign']['end_time'], 'local')
 

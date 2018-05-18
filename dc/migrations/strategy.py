@@ -83,8 +83,8 @@ def migrate(schema: Schema):
             table.big_integer('account_id')
             table.big_integer('campaign_id')
             table.text('action')  # 调整动作
-            table.text('value')   # 调整值
-            table.text('extra')   # 额外参数
+            table.text('value').nullable()   # 调整值
+            table.text('extra').nullable()   # 额外参数
             table.text('triggered_point').nullable()  # 触发该action的记录
             table.text('resp_cnt').nullable()         # 执行结果内容
             table.string('resp_status_code').nullable()  # 执行结果状态
